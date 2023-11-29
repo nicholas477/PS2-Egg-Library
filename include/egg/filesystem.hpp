@@ -1,6 +1,5 @@
 #pragma once
 
-#include "assert.hpp"
 #include <cstddef>
 #include <vector>
 #include <string>
@@ -10,10 +9,12 @@
 #include <array>
 #include <string.h>
 
+#include "egg/assert.hpp"
+#include "egg/hashing.hpp"
 #include "egg/string.hpp"
 
 #ifdef _MSC_VER
-#include <stdlib.h> // for WCSTOMBS 
+#include <stdlib.h> // for WCSTOMBS
 #endif
 
 
@@ -108,7 +109,10 @@ public:
 	}
 #endif
 
-	constexpr char& operator[](size_t id) noexcept { return mem[id]; }
+	constexpr char& operator[](size_t id) noexcept
+	{
+		return mem[id];
+	}
 	constexpr const char& operator[](size_t id) const noexcept { return mem[id]; }
 
 	// Returns the raw data contained in mem. This is not a full system filepath
@@ -132,6 +136,11 @@ public:
 		strncpy(buffer.data() + filesystem_prefix_length, mem, max_path_length);
 
 		return buffer.data();
+	}
+
+	constexpr uint32_t hash() const
+	{
+		return crc32(data(), length());
 	}
 
 	char mem[max_path_length];
@@ -239,3 +248,12 @@ constexpr Filesystem::Path operator""_p(const char* p, std::size_t)
 {
 	return Filesystem::Path(p, true);
 }
+
+template <>
+struct std::hash<Filesystem::Path>
+{
+	std::size_t operator()(const Filesystem::Path& k) const
+	{
+		return k.hash();
+	}
+};
