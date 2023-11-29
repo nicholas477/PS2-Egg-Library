@@ -7,6 +7,10 @@
 #include <string_view>
 #include <memory>
 #include <functional>
+#include <array>
+
+#include "egg/string.hpp"
+
 
 namespace Filesystem
 {
@@ -169,6 +173,130 @@ struct Path
 		return _path_str == other._path_str;
 	}
 };
+
+static void convert_to_83_path(std::string_view path, char* buffer, size_t len)
+{
+	// Iterate backwards and look for the beginning of the filename
+	size_t filename_begin  = 0;
+	size_t extension_begin = path.size();
+	for (size_t i = path.size();; --i)
+	{
+		if (path[i] == '.')
+		{
+			extension_begin = i;
+		}
+		else if (path[i] == '/' || path[i] == '\\')
+		{
+			filename_begin = i + 1;
+			break;
+		}
+
+		if (i == 0)
+		{
+			break;
+		}
+	}
+
+	// Copy up to the first 8 filename characters over
+	size_t itr_end = std::min(std::min(filename_begin + 8, extension_begin), path.size());
+	for (size_t i = 0; i < itr_end; ++i)
+	{
+		buffer[i] = path[i];
+	}
+
+	// Copy the extension over
+	size_t itr_extension_end = std::min((size_t)4U, path.size() - extension_begin);
+	for (size_t i = 0; i < itr_extension_end; ++i)
+	{
+		buffer[itr_end + i] = path[extension_begin + i];
+	}
+	buffer[itr_end + itr_extension_end] = '\0';
+}
+
+class ConstexprPath
+{
+public:
+	constexpr ConstexprPath() noexcept
+	{
+	}
+
+	constexpr char& operator[](size_t id) noexcept { return mem[id]; }
+	constexpr const char& operator[](size_t id) const noexcept { return mem[id]; }
+
+	constexpr const char* data() const noexcept { return mem; }
+	constexpr size_t max_size() const noexcept { return 256; }
+	constexpr size_t length() const { return constexpr_strlen(mem); }
+
+	constexpr bool operator==(const char* rhs)
+	{
+		return std::string_view(mem) == std::string_view(rhs);
+	}
+
+	char mem[256];
+};
+
+constexpr ConstexprPath constexpr_convert_to_83_path(const char* path)
+{
+	ConstexprPath buffer;
+
+	// Iterate backwards and look for the beginning of the filename
+	size_t filename_begin  = 0;
+	size_t extension_begin = constexpr_strlen(path);
+	for (size_t i = constexpr_strlen(path);; --i)
+	{
+		if (path[i] == '.')
+		{
+			extension_begin = i;
+		}
+		else if (path[i] == '/' || path[i] == '\\')
+		{
+			filename_begin = i + 1;
+			break;
+		}
+
+		if (i == 0)
+		{
+			break;
+		}
+	}
+
+	// Copy up to the first 8 filename characters over
+	size_t itr_end = std::min(std::min(filename_begin + 8, extension_begin), constexpr_strlen(path));
+	for (size_t i = 0; i < itr_end; ++i)
+	{
+		if (path[i] == '\\' || path[i] == '/')
+		{
+			buffer[i] = get_filesystem_separator(Type::cdrom);
+		}
+		else if (path[i] == '-')
+		{
+			buffer[i] = '_';
+		}
+		else
+		{
+			buffer[i] = charToUpper(path[i]);
+		}
+	}
+
+	// Copy the extension over
+	size_t itr_extension_end = std::min((size_t)4U, constexpr_strlen(path) - extension_begin);
+	for (size_t i = 0; i < itr_extension_end; ++i)
+	{
+		if (path[extension_begin + i] == '-')
+		{
+			buffer[itr_end + i] = '_';
+		}
+		else
+		{
+			buffer[itr_end + i] = charToUpper(path[extension_begin + i]);
+		}
+	}
+	buffer[itr_end + itr_extension_end] = '\0';
+
+	return buffer;
+}
+
+static_assert(constexpr_convert_to_83_path("/asdf-ggggg/sdkfjs.egg2") == "\\ASDF_GGGGG\\SDKFJS.EGG");
 
 } // namespace Filesystem
 

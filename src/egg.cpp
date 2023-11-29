@@ -1,6 +1,9 @@
 #include "egg/math_types.hpp"
 #include "egg/mesh_header.hpp"
 #include "egg/serialization.hpp"
+#include "egg/level.hpp"
+#include "egg/hashing.hpp"
+#include "egg/string.hpp"
 
 #include <sstream>
 

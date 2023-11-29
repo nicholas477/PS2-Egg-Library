@@ -7,6 +7,7 @@
 #include <memory>
 #include <filesystem>
 
+#include "egg/string.hpp"
 #include "egg/assert.hpp"
 
 namespace Filesystem
@@ -20,51 +21,6 @@ Type get_filesystem_type()
 void set_filesystem_type(Type new_type)
 {
 	_filesystem_type = new_type;
-}
-
-static constexpr std::size_t constexpr_strlen(const char* s)
-{
-	return std::char_traits<char>::length(s);
-}
-
-static void convert_to_83_path(std::string_view path, char* buffer, size_t len)
-{
-	// Iterate backwards and look for the beginning of the filename
-	size_t filename_begin  = 0;
-	size_t extension_begin = path.size();
-	for (size_t i = path.size();; --i)
-	{
-		if (path[i] == '.')
-		{
-			extension_begin = i;
-		}
-		else if (path[i] == '/' || path[i] == '\\')
-		{
-			filename_begin = i + 1;
-			break;
-		}
-
-		if (i == 0)
-		{
-			break;
-		}
-	}
-
-	// Copy up to the first 8 filename characters over
-	size_t itr_end = std::min(filename_begin + 8, extension_begin);
-	itr_end        = std::min(itr_end, path.size());
-	for (size_t i = 0; i < itr_end; ++i)
-	{
-		buffer[i] = path[i];
-	}
-
-	// Copy the extension over
-	size_t itr_extension_end = std::min((size_t)4U, path.size() - extension_begin);
-	for (size_t i = 0; i < itr_extension_end; ++i)
-	{
-		buffer[itr_end + i] = path[extension_begin + i];
-	}
-	buffer[itr_end + itr_extension_end] = '\0';
 }
 
 template <Type type>
@@ -174,7 +130,7 @@ bool load_file(const Path& path, std::unique_ptr<std::byte[]>& out_bytes, size_t
 	{
 		// Read the file size
 		file.seekg(0, std::ios::end);
-		size      = file.tellg();
+		size = file.tellg();
 #ifdef _MSC_VER
 		out_bytes = std::unique_ptr<std::byte[]>((std::byte*)operator new[](size, (std::align_val_t)alignment));
 #else
