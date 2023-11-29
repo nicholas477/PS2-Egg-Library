@@ -12,6 +12,10 @@
 
 #include "egg/string.hpp"
 
+#ifdef _MSC_VER
+#include <stdlib.h> // for WCSTOMBS 
+#endif
+
 
 namespace Filesystem
 {
@@ -92,6 +96,17 @@ public:
 			*this = in_path;
 		}
 	}
+
+#ifdef _MSC_VER
+	Path(const wchar_t* in_path, bool convert_path = true)
+	{
+		wcstombs(mem, in_path, max_path_length);
+		if (convert_path)
+		{
+			*this = convert_to_iso_path(mem);
+		}
+	}
+#endif
 
 	constexpr char& operator[](size_t id) noexcept { return mem[id]; }
 	constexpr const char& operator[](size_t id) const noexcept { return mem[id]; }
