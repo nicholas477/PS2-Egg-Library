@@ -23,89 +23,9 @@ void set_filesystem_type(Type new_type)
 	_filesystem_type = new_type;
 }
 
-template <Type type>
-static std::string convert_filepath_to_systempath_impl(std::string_view path)
-{
-	size_t host_string_length = constexpr_strlen(get_filesystem_prefix(type)) + (size_t)1; // + 1 for the filesystem separator
-	host_string_length += path.length();
-
-	check(host_string_length <= 255);
-
-	static char out_path_chars[256];
-
-	constexpr const char* filesystem_prefix = get_filesystem_prefix(type);
-	constexpr int filesystem_prefix_len     = constexpr_strlen(filesystem_prefix);
-
-	// Copy over the filesystem prefix to the buffer
-	for (int i = 0; i < filesystem_prefix_len; ++i)
-	{
-		out_path_chars[i] = filesystem_prefix[i];
-	}
-
-	int index = filesystem_prefix_len;
-
-	size_t path_start = 0;
-	// iterate past the start of the path
-	while (path[path_start] == '\\' || path[path_start] == '/')
-	{
-		path_start++;
-	}
-
-	path = std::string_view(path.data() + path_start, path.size() - path_start);
-
-	if constexpr (type == Type::cdrom)
-	{
-		convert_to_83_path(path, out_path_chars + filesystem_prefix_len, (256 - filesystem_prefix_len) - 1);
-	}
-	else
-	{
-		strncpy(out_path_chars + filesystem_prefix_len, path.data(), (256 - filesystem_prefix_len) - 1);
-	}
-
-	// Convert to uppercase, etc
-	for (size_t i = filesystem_prefix_len - 1; i < host_string_length; ++i)
-	{
-		if (out_path_chars[i] == '\\' || out_path_chars[i] == '/')
-		{
-			out_path_chars[i] = get_filesystem_separator(type);
-		}
-		else if (out_path_chars[i] == '-')
-		{
-			out_path_chars[i] = '_';
-		}
-		else if (get_filesystem_type() == Type::cdrom)
-		{
-			out_path_chars[i] = toupper(out_path_chars[i]);
-		}
-	}
-
-	return std::string(out_path_chars);
-}
-
-std::string convert_filepath_to_systempath(std::string_view path, Type in_filesystem_type)
-{
-	switch (in_filesystem_type)
-	{
-		case Type::cdrom:
-			return convert_filepath_to_systempath_impl<Type::cdrom>(path);
-
-		case Type::host:
-			return convert_filepath_to_systempath_impl<Type::host>(path);
-
-		case Type::rom:
-			return convert_filepath_to_systempath_impl<Type::rom>(path);
-
-		case Type::uninitialized:
-			checkf(false, "Tried to convert filepath to systempath on an uninitialized filesystem!\n");
-	}
-
-	check(false);
-	return "";
-}
-
 bool load_file(const Path& path, std::vector<std::byte>& out_bytes)
 {
-	std::ifstream file(path, std::ios::binary);
+	std::ifstream file(path.to_full_filepath(), std::ios::binary);
 	if (file.is_open() && file.good())
 	{
 		// Read the file size
@@ -125,7 +45,7 @@ bool load_file(const Path& path, std::vector<std::byte>& out_bytes)
 
 bool load_file(const Path& path, std::unique_ptr<std::byte[]>& out_bytes, size_t& size, size_t alignment)
 {
-	std::ifstream file(path, std::ios::binary);
+	std::ifstream file(path.to_full_filepath(), std::ios::binary);
 	if (file.is_open() && file.good())
 	{
 		// Read the file size
@@ -149,7 +69,7 @@ bool load_file(const Path& path, std::unique_ptr<std::byte[]>& out_bytes, size_t
 
 bool file_exists(const Path& path)
 {
-	return std::filesystem::exists(path.c_str());
+	return std::filesystem::exists(path.to_full_filepath());
 }
 
 void iterate_dir(const Path& dir, std::function<void(const Path&)> itr_func, bool recursive)
@@ -160,7 +80,7 @@ void iterate_dir(const Path& dir, std::function<void(const Path&)> itr_func, boo
 	if (recursive)
 	{
 		for (const fs::directory_entry& dir_entry :
-		     fs::recursive_directory_iterator(dir.c_str()))
+		     fs::recursive_directory_iterator(dir.to_full_filepath()))
 		{
 			itr_func(Path(dir_entry.path().c_str(), false));
 		}
@@ -168,33 +88,33 @@ void iterate_dir(const Path& dir, std::function<void(const Path&)> itr_func, boo
 	else
 	{
 		for (const fs::directory_entry& dir_entry :
-		     fs::directory_iterator(dir.c_str()))
+		     fs::directory_iterator(dir.to_full_filepath()))
 		{
 			itr_func(Path(dir_entry.path().c_str(), false));
 		}
 	}
 }
 
-void run_tests()
-{
-	switch (get_filesystem_type())
-	{
-		case Type::cdrom: {
-			const std::string converted_path           = convert_filepath_to_systempath_impl<Type::cdrom>("audsrv.irx");
-			constexpr std::string_view expected_string = "cdrom0:\\AUDSRV.IRX";
-			if (converted_path != expected_string)
-			{
-				printf("Filesystem check failed!\n");
-				printf("Input string: %s\n", "audsrv.irx");
-				printf("Converted string: %s\n", converted_path.c_str());
-				printf("Expected string: %s\n", expected_string.data());
-				check(false);
-			}
-			break;
-		}
+// void run_tests()
+// {
+// 	switch (get_filesystem_type())
+// 	{
+// 		case Type::cdrom: {
+// 			const std::string converted_path           = convert_filepath_to_systempath_impl<Type::cdrom>("audsrv.irx");
+// 			constexpr std::string_view expected_string = "cdrom0:\\AUDSRV.IRX";
+// 			if (converted_path != expected_string)
+// 			{
+// 				printf("Filesystem check failed!\n");
+// 				printf("Input string: %s\n", "audsrv.irx");
+// 				printf("Converted string: %s\n", converted_path.c_str());
+// 				printf("Expected string: %s\n", expected_string.data());
+// 				check(false);
+// 			}
+// 			break;
+// 		}
 
-		default:
-			break;
-	}
-}
+// 		default:
+// 			break;
+// 	}
+// }
 } // namespace Filesystem
