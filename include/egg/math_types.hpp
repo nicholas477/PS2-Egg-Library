@@ -20,8 +20,14 @@ static float normalize_axis(float);
 #else
 #include <sstream>
 
+#ifdef _MSC_VER
+__declspec(align(16)) typedef float VECTOR[4];
+__declspec(align(16)) typedef float MATRIX[16];
+#else
 typedef float VECTOR[4] __attribute__((__aligned__(16)));
 typedef float MATRIX[16] __attribute__((__aligned__(16)));
+#endif
+
 #endif
 
 struct alignas(16) Vector2
