@@ -381,6 +381,8 @@ struct alignas(16) Matrix
 		return matrix[col + (row * 4)];
 	}
 
+	std::string to_string() const;
+
 #ifdef _EE
 	static constexpr Matrix UnitMatrix()
 	{
@@ -434,8 +436,6 @@ struct alignas(16) Matrix
 		matrix_inverse(out_matrix.matrix, const_cast<float*>(matrix));
 		return out_matrix;
 	}
-
-	std::string to_string() const;
 #endif
 };
 
