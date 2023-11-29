@@ -17,7 +17,7 @@ public:
 	// Returns nullptr if the value doesn't exist
 	valueT* lookup(const keyT& key)
 	{
-		uint32_t hash = std::hash<keyT>()(key);
+		uint32_t hash = (uint32_t)std::hash<keyT>()(key);
 		check(hash != 0);
 
 		int32_t index = lookup_by_hash(hash);
@@ -32,7 +32,7 @@ public:
 	// Returns nullptr if the value doesn't exist
 	const valueT* lookup(const keyT& key) const
 	{
-		uint32_t hash = std::hash<keyT>()(key);
+		uint32_t hash = (uint32_t)std::hash<keyT>()(key);
 		check(hash != 0);
 
 		int32_t index = lookup_by_hash(hash);
@@ -111,7 +111,7 @@ public:
 
 	bool add_key_value(const keyT& key, const valueT& value)
 	{
-		uint32_t hash = std::hash<keyT>()(key);
+		uint32_t hash = (uint32_t)std::hash<keyT>()(key);
 		check(hash != 0);
 
 		int32_t empty_index = find_next_empty_index(hash);
