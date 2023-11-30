@@ -16,16 +16,18 @@ struct Reference
 	uint32_t hash;
 
 	constexpr Reference()
+	    : hash(0)
 	{
-		hash = 0;
 	}
 
 	constexpr Reference(const Filesystem::Path& path)
+	    : hash(0)
 	{
 		hash = path.hash();
 	}
 
 	constexpr Reference(const char* path, bool convert_to_iso_path = true)
+	    : hash(0)
 	{
 		hash = Filesystem::Path(path, convert_to_iso_path).hash();
 	}

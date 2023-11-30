@@ -83,10 +83,12 @@ struct Path
 {
 public:
 	constexpr Path() noexcept
+	    : mem({0})
 	{
 	}
 
 	constexpr Path(const char* in_path, bool convert_path = true)
+	    : mem({0})
 	{
 		if (convert_path)
 		{
@@ -116,13 +118,13 @@ public:
 	constexpr const char& operator[](size_t id) const noexcept { return mem[id]; }
 
 	// Returns the raw data contained in mem. This is not a full system filepath
-	constexpr const char* data() const noexcept { return mem; }
+	constexpr const char* data() const noexcept { return mem.data(); }
 	constexpr size_t max_size() const noexcept { return max_path_length; }
-	constexpr size_t length() const { return constexpr_strlen(mem); }
+	constexpr size_t length() const { return constexpr_strlen(mem.data()); }
 
 	constexpr bool operator==(const char* rhs)
 	{
-		return std::string_view(mem) == std::string_view(rhs);
+		return std::string_view(mem.data()) == std::string_view(rhs);
 	}
 
 	const char* to_full_filepath(Type in_filesystem_type = get_filesystem_type()) const
@@ -133,7 +135,7 @@ public:
 		const char* filesystem_prefix   = get_filesystem_prefix(in_filesystem_type);
 		size_t filesystem_prefix_length = constexpr_strlen(filesystem_prefix);
 		strncpy(buffer.data(), filesystem_prefix, filesystem_prefix_length);
-		strncpy(buffer.data() + filesystem_prefix_length, mem, max_path_length);
+		strncpy(buffer.data() + filesystem_prefix_length, mem.data(), max_path_length);
 
 		return buffer.data();
 	}
@@ -143,7 +145,7 @@ public:
 		return crc32(data(), length());
 	}
 
-	char mem[max_path_length];
+	std::array<char, 256> mem;
 
 protected:
 	constexpr Path& operator=(const char* rhs)
