@@ -20,6 +20,11 @@ struct Reference
 	{
 	}
 
+	constexpr Reference(uint32_t in_hash)
+	    : hash(in_hash)
+	{
+	}
+
 	constexpr Reference(const Filesystem::Path& path)
 	    : hash(0)
 	{
@@ -46,6 +51,8 @@ bool add_path(Reference reference, const Filesystem::Path& path);
 // This version hashes the path before adding it
 bool add_path(const Filesystem::Path& path);
 
+bool add_path(Reference reference, const char* path, bool convert_path);
+
 // Copies the passed in asset table bytes to the global asset table
 // Checks to make sure length matches the length of the global asset table
 void load_asset_table(std::byte* bytes, size_t length);
@@ -53,6 +60,7 @@ void load_asset_table(std::byte* bytes, size_t length);
 // Writes out the global asset table
 void serialize_asset_table(std::vector<std::byte>& out_bytes);
 
+AssetHashMapT& get_asset_table();
 } // namespace Asset
 
 template <>

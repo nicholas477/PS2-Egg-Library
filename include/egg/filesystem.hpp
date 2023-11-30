@@ -174,7 +174,7 @@ constexpr Path convert_to_iso_path(const char* path)
 	Path out_path;
 
 	// iterate past the beginning separators
-	while (path[0] == '\\' || path[0] == '/')
+	while (path[0] == '\\' || path[0] == '/' || path[0] == '.')
 	{
 		path++;
 	}

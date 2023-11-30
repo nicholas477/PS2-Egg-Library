@@ -17,6 +17,13 @@ bool Asset::add_path(const Filesystem::Path& path)
 	return add_path(Asset::Reference(path), path);
 }
 
+
+bool Asset::add_path(Reference reference, const char* path, bool convert_path)
+{
+	check(strlen(path) <= 255);
+	return add_path(reference, Filesystem::Path(path, convert_path));
+}
+
 void Asset::load_asset_table(std::byte* bytes, size_t length)
 {
 	check(sizeof(AssetHashMapT) == length);
@@ -29,4 +36,9 @@ void Asset::serialize_asset_table(std::vector<std::byte>& out_bytes)
 	out_bytes.resize(sizeof(AssetHashMapT));
 
 	memcpy(out_bytes.data(), &asset_paths, sizeof(AssetHashMapT));
+}
+
+Asset::AssetHashMapT& Asset::get_asset_table()
+{
+	return asset_paths;
 }
