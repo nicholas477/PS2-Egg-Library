@@ -103,10 +103,10 @@ public:
 #ifdef _MSC_VER
 	Path(const wchar_t* in_path, bool convert_path = true)
 	{
-		wcstombs(mem, in_path, max_path_length);
+		wcstombs(mem.data(), in_path, max_path_length);
 		if (convert_path)
 		{
-			*this = convert_to_iso_path(mem);
+			*this = convert_to_iso_path(mem.data());
 		}
 	}
 #endif
