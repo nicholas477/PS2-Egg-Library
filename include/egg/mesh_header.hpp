@@ -6,15 +6,13 @@
 #include <cstdint>
 #include <vector>
 
-#pragma pack(push, 1)
-
-struct MeshTriangleStripHeader
+struct Packed MeshTriangleStripHeader
 {
 	uint32_t strip_start_index; // Index of the starting vertex
 	uint32_t strip_end_index;   // Index of the ending vertex
 };
 
-struct MeshFileHeader
+struct Packed MeshFileHeader
 {
 	OffsetArray<Vector> pos;
 	OffsetArray<Vector> nrm;
@@ -30,5 +28,3 @@ static_assert(std::is_standard_layout_v<OffsetArray<Vector>> == true);
 static_assert(std::is_standard_layout_v<OffsetArray<Vector2>> == true);
 static_assert(std::is_standard_layout_v<OffsetArray<MeshTriangleStripHeader>> == true);
 static_assert(std::is_standard_layout_v<MeshFileHeader> == true);
-
-#pragma pack(pop)
