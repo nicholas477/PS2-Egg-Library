@@ -6,7 +6,8 @@
 #include "egg/asset.hpp"
 #include <cstdint>
 
-struct Packed LevelMeshes
+#pragma pack(push, 1)
+struct LevelMeshes
 {
 	OffsetArray<Matrix> mesh_transforms;
 	OffsetArray<Asset::Reference> mesh_files;
@@ -17,7 +18,7 @@ static void collect_references(std::unordered_set<Asset::Reference>& references,
 	collect_references(references, meshes.mesh_files);
 }
 
-struct Packed LevelFileHeader
+struct LevelFileHeader
 {
 	LevelMeshes meshes;
 };
@@ -26,3 +27,5 @@ static void collect_references(std::unordered_set<Asset::Reference>& references,
 {
 	collect_references(references, level.meshes);
 }
+
+#pragma pack(pop)

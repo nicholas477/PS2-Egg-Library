@@ -6,9 +6,6 @@
 #include <string.h>
 #include <vector>
 
-// Packs this struct/class for serialization
-#define Packed __attribute__((packed))
-
 // Pads a number to the next aligned number
 // pad_to_alignment(3, 8) = 8
 static constexpr size_t pad_to_alignment(size_t current_index,
